@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeatForge Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Exo+2:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg:#080810; --bg2:#0d0d1a; --panel:#111122; --panel2:#161630;
+      --border:rgba(0,229,255,0.12); --border2:rgba(255,255,255,0.06);
+      --cyan:#00e5ff; --cyan-dim:rgba(0,229,255,0.35); --cyan-glow:rgba(0,229,255,0.15);
+      --orange:#ff6b35; --orange-dim:rgba(255,107,53,0.35);
+      --text:#dde0f0; --text-dim:rgba(221,224,240,0.45); --text-mid:rgba(221,224,240,0.7);
+      --on-glow:0 0 10px rgba(0,229,255,0.7),0 0 2px rgba(0,229,255,0.9);
+      --tab-h:40px; --font-mono:'Space Mono',monospace; --font-ui:'Exo 2',sans-serif;
+    }
+    html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font-ui); }
+    ::-webkit-scrollbar { width:5px; height:5px; }
+    ::-webkit-scrollbar-track { background:var(--bg); }
+    ::-webkit-scrollbar-thumb { background:rgba(0,229,255,0.25); border-radius:3px; }
+
+    #app { display:flex; flex-direction:column; height:100vh; }
+
+    /* ── HEADER ────────────────────────────────── */
+    #header {
+      background:linear-gradient(180deg,#0a0a18,#080812);
+      border-bottom:1px solid var(--border);
+      flex-shrink:0; padding:0 16px;
+    }
+    #header-top {
+      height:48px; display:flex; align-items:center; gap:10px;
+      border-bottom:1px solid var(--border2);
+    }
+    #header-bottom { height:52px; display:flex; align-items:center; gap:8px; }
+    .logo-text {
+      font-family:var(--font-mono); font-size:1.05rem; font-weight:700;
+      color:var(--cyan); text-shadow:0 0 20px rgba(0,229,255,0.5);
+      letter-spacing:.05em; white-space:nowrap; margin-right:4px;
+    }
+    .hdr-sep { width:1px; height:24px; background:var(--border2); }
+    #project-name {
+      font-size:.85rem; font-weight:500; color:var(--text);
+      border:none; background:transparent; outline:none;
+      border-bottom:1px solid transparent; padding:2px 4px;
+      min-width:140px; cursor:text; font-family:var(--font-ui);
+    }
+    #project-name:focus { border-bottom-color:var(--cyan-dim); }
+    .hdr-spacer { flex:1; }
+    .hdr-btn {
+      height:28px; padding:0 12px;
+      border:1px solid var(--border2); background:rgba(255,255,255,0.04);
+      color:var(--text-mid); font-family:var(--font-mono); font-size:.65rem;
+      font-weight:700; letter-spacing:.08em; cursor:pointer; border-radius:4px;
+      transition:all .15s; white-space:nowrap;
+    }
+    .hdr-btn:hover { background:rgba(0,229,255,0.08); border-color:var(--cyan-dim); color:var(--cyan); }
+    .hdr-btn.primary { background:var(--cyan-glow); border-color:var(--cyan-dim); color:var(--cyan); }
+    #user-info { display:flex; align-items:center; gap:8px; font-size:.78rem; color:var(--text-dim); }
+    #user-avatar { width:24px; height:24px; border-radius:50%; display:none; object-fit:cover; }
+    #guest-badge {
+      padding:2px 8px; background:rgba(255,180,0,0.12);
+      border:1px solid rgba(255,180,0,0.3); color:#ffcc44;
+      font-family:var(--font-mono); font-size:.55rem;
+      border-radius:10px; letter-spacing:.06em; display:none;
+    }
+
+    /* ── TRANSPORT ─────────────────────────────── */
+    #transport { display:flex; align-items:center; gap:6px; }
+    .transport-btn {
+      width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+      background:rgba(255,255,255,0.05); border:1px solid var(--border2);
+      border-radius:6px; cursor:pointer; font-size:.9rem; color:var(--text-mid); transition:all .15s;
+    }
+    .transport-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
+    .transport-btn.active { background:rgba(0,229,255,0.15); border-color:var(--cyan-dim); color:var(--cyan); box-shadow:var(--on-glow); }
+    #btn-play { width:44px; height:44px; font-size:1.1rem; }
+    #bpm-ctrl {
+      display:flex; align-items:center;
+      background:rgba(255,255,255,0.04); border:1px solid var(--border2);
+      border-radius:6px; overflow:hidden; margin-left:8px;
+    }
+    #bpm-ctrl button { width:22px; height:36px; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:.8rem; transition:all .1s; }
+    #bpm-ctrl button:hover { background:rgba(255,255,255,0.07); color:var(--text); }
+    #bpm-display { padding:0 8px; font-family:var(--font-mono); font-size:.85rem; font-weight:700; color:var(--cyan); cursor:pointer; user-select:none; min-width:38px; text-align:center; }
+    #bpm-label { font-size:.55rem; color:var(--text-dim); letter-spacing:.1em; }
+    #master-vol-ctrl { display:flex; align-items:center; gap:6px; margin-left:8px; }
+    #master-vol-ctrl label { font-size:.6rem; color:var(--text-dim); letter-spacing:.1em; }
+    #master-vol { width:80px; accent-color:var(--cyan); }
+    #master-vol-val { font-family:var(--font-mono); font-size:.65rem; color:var(--text-mid); width:30px; }
+
+    /* ── TABS ───────────────────────────────────── */
+    #tabs {
+      display:flex; background:var(--bg2); border-bottom:1px solid var(--border);
+      flex-shrink:0; padding:0 12px; gap:2px;
+    }
+    .tab-btn {
+      height:var(--tab-h); padding:0 16px;
+      background:none; border:none; border-bottom:2px solid transparent;
+      color:var(--text-dim); font-family:var(--font-mono); font-size:.65rem;
+      font-weight:700; letter-spacing:.1em; cursor:pointer; transition:all .15s; white-space:nowrap;
+    }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+
+    /* ── PANELS ─────────────────────────────────── */
+    #main { flex:1; overflow:hidden; position:relative; }
+    .tab-panel { display:none; width:100%; height:100%; overflow:auto; }
+    .tab-panel.active { display:flex; flex-direction:column; }
+
+    /* ── SEQUENCER ──────────────────────────────── */
+    #tab-sequencer { background:var(--bg); }
+    #seq-toolbar {
+      display:flex; align-items:center; gap:8px;
+      padding:8px 16px; background:var(--bg2);
+      border-bottom:1px solid var(--border2); flex-shrink:0; flex-wrap:wrap;
+    }
+    #seq-toolbar label { font-size:.65rem; color:var(--text-dim); letter-spacing:.08em; }
+    #seq-toolbar select {
+      background:rgba(255,255,255,0.05); border:1px solid var(--border2);
+      color:var(--text); font-family:var(--font-mono); font-size:.65rem;
+      padding:3px 6px; border-radius:4px; cursor:pointer;
+    }
+    .seq-tb-btn {
+      height:26px; padding:0 10px; background:rgba(255,255,255,0.05);
+      border:1px solid var(--border2); color:var(--text-dim);
+      font-family:var(--font-mono); font-size:.6rem; letter-spacing:.08em;
+      border-radius:4px; cursor:pointer; transition:all .12s;
+    }
+    .seq-tb-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
+    #pattern-btns { display:flex; gap:4px; }
+    .pat-btn {
+      height:26px; padding:0 8px; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border2); color:var(--text-dim);
+      font-family:var(--font-mono); font-size:.6rem; border-radius:4px; cursor:pointer; transition:all .12s;
+    }
+    .pat-btn.active { background:var(--cyan-glow); border-color:var(--cyan-dim); color:var(--cyan); }
+    .hdr-div { width:1px; height:20px; background:var(--border2); margin:0 4px; }
+
+    #seq-grid { flex:1; overflow-y:auto; padding:10px 16px 16px; }
+    .seq-row { display:flex; align-items:center; margin-bottom:5px; gap:0; }
+    .seq-controls { display:flex; align-items:center; gap:5px; width:180px; flex-shrink:0; }
+    .ch-name { font-family:var(--font-mono); font-size:.62rem; color:var(--text-mid); width:52px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ch-mute,.ch-solo {
+      width:22px; height:22px; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border2); color:var(--text-dim);
+      font-family:var(--font-mono); font-size:.6rem; font-weight:700;
+      border-radius:3px; cursor:pointer; transition:all .12s;
+    }
+    .ch-mute.on { background:rgba(255,107,53,.25); border-color:var(--orange-dim); color:var(--orange); }
+    .ch-solo.on { background:var(--cyan-glow); border-color:var(--cyan-dim); color:var(--cyan); }
+    .ch-vol { width:55px; accent-color:var(--cyan); }
+    .seq-steps { display:flex; gap:3px; flex:1; }
+    .step-btn {
+      flex:1; height:34px; background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08); border-radius:4px;
+      cursor:pointer; transition:background .08s,border-color .08s,box-shadow .08s; min-width:0;
+    }
+    .step-btn.beat-start { border-left-color:rgba(0,229,255,0.25); }
+    .step-btn:hover { background:rgba(0,229,255,0.12); }
+    .step-btn.on { background:var(--cyan); border-color:var(--cyan); box-shadow:var(--on-glow); }
+    .step-btn.playing { background:var(--orange)!important; border-color:var(--orange)!important; box-shadow:0 0 12px rgba(255,107,53,.8)!important; }
+    .step-btn.on.playing { background:#fff!important; border-color:#fff!important; }
+
+    /* ── PIANO ROLL ─────────────────────────────── */
+    #tab-pianoroll { flex-direction:column; background:var(--bg); }
+    #pr-toolbar {
+      display:flex; align-items:center; gap:8px;
+      padding:8px 16px; background:var(--bg2);
+      border-bottom:1px solid var(--border2); flex-shrink:0; flex-wrap:wrap;
+    }
+    #pr-toolbar label { font-size:.65rem; color:var(--text-dim); letter-spacing:.08em; }
+    #pr-toolbar select {
+      background:rgba(255,255,255,0.05); border:1px solid var(--border2);
+      color:var(--text); font-family:var(--font-mono); font-size:.65rem;
+      padding:3px 6px; border-radius:4px; cursor:pointer;
+    }
+    .pr-btn {
+      height:26px; padding:0 10px; background:rgba(255,255,255,0.05);
+      border:1px solid var(--border2); color:var(--text-dim);
+      font-family:var(--font-mono); font-size:.6rem; letter-spacing:.08em;
+      border-radius:4px; cursor:pointer; transition:all .12s;
+    }
+    .pr-btn:hover { background:rgba(255,255,255,0.1); color:var(--text); }
+    .pr-hint { font-size:.6rem; color:var(--text-dim); margin-left:auto; }
+    #piano-roll-wrap { flex:1; overflow:hidden; position:relative; }
+    #piano-roll-canvas { display:block; cursor:crosshair; user-select:none; }
+
+    /* ── SYNTH ──────────────────────────────────── */
+    #tab-synth { background:var(--bg); overflow-y:auto; flex-direction:column; }
+    .synth-layout { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:16px; }
+    .synth-panel { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px; }
+    .synth-title {
+      font-family:var(--font-mono); font-size:.6rem; font-weight:700;
+      letter-spacing:.12em; color:var(--cyan); margin-bottom:14px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .synth-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .wave-btns { display:flex; gap:4px; flex-wrap:wrap; }
+    .wave-btn {
+      flex:1; padding:6px 4px; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border2); color:var(--text-dim);
+      font-family:var(--font-mono); font-size:.6rem; border-radius:4px;
+      cursor:pointer; text-align:center; transition:all .12s; white-space:nowrap;
+    }
+    .wave-btn.active { background:var(--cyan-glow); border-color:var(--cyan-dim); color:var(--cyan); }
+    .ftype-btns { display:flex; gap:4px; }
+    .ftype-btn {
+      flex:1; padding:5px 3px; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border2); color:var(--text-dim);
+      font-family:var(--font-mono); font-size:.55rem; border-radius:4px;
+      cursor:pointer; text-align:center; transition:all .12s;
+    }
+    .ftype-btn.active { background:var(--cyan-glow); border-color:var(--cyan-dim); color:var(--cyan); }
+    .knob-row { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+    .knob-group { display:flex; flex-direction:column; gap:4px; }
+    .knob-label { font-size:.58rem; color:var(--text-dim); letter-spacing:.08em; display:flex; justify-content:space-between; }
+    .knob-label span:last-child { color:var(--cyan); font-family:var(--font-mono); font-size:.55rem; }
+    .s-slider { width:100%; accent-color:var(--cyan); }
+    .env-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
+    #synth-keyboard { padding:0 16px 16px; flex-shrink:0; }
+    .synth-keys { display:flex; height:70px; background:var(--panel); border:1px solid var(--border); border-radius:8px; overflow:hidden; padding:0 4px; }
+    .skey { flex:1; min-width:24px; max-width:40px; border-right:1px solid var(--bg); border-radius:0 0 5px 5px; cursor:pointer; transition:all .08s; }
+    .skey.white { background:#dde0f0; }
+    .skey.white:hover,.skey.white:active { background:var(--cyan); }
+    .skey.black { background:#1a1a2e; height:65%; margin:0 -7px; z-index:2; flex:0.65; border-radius:0 0 4px 4px; }
+    .skey.black:hover,.skey.black:active { background:var(--cyan); }
+
+    /* ── MIXER ──────────────────────────────────── */
+    #tab-mixer { background:var(--bg); overflow-x:auto; overflow-y:hidden; flex-direction:row; }
+    #mixer-grid { display:flex; gap:4px; padding:12px 16px; flex:1; overflow-x:auto; align-items:stretch; }
+    .mixer-strip {
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      width:68px; flex-shrink:0; background:var(--panel);
+      border:1px solid var(--border2); border-radius:8px; padding:10px 6px;
+    }
+    .master-strip { border-color:var(--border); background:rgba(0,229,255,.04); }
+    .mix-name { font-family:var(--font-mono); font-size:.55rem; color:var(--text-dim); text-align:center; letter-spacing:.05em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%; }
+    .master-strip .mix-name { color:var(--cyan); }
+    .mix-vu { width:100%; height:60px; background:rgba(0,0,0,.3); border-radius:3px; overflow:hidden; display:flex; flex-direction:column-reverse; border:1px solid var(--border2); }
+    .vu-bar { width:100%; height:0%; background:linear-gradient(to top,#00e5ff,#00ff88,#ffcc00,#ff4400); transition:height .05s; border-radius:2px; }
+    .mix-fader { -webkit-appearance:slider-vertical; appearance:slider-vertical; writing-mode:vertical-lr; direction:rtl; width:28px; height:100px; accent-color:var(--cyan); flex:1; cursor:pointer; }
+    .mix-vol-val { font-family:var(--font-mono); font-size:.55rem; color:var(--text-dim); }
+    .mix-pan { width:100%; accent-color:var(--cyan); }
+    .mix-btns { display:flex; gap:3px; }
+    .mix-mute,.mix-solo { width:24px; height:20px; background:rgba(255,255,255,.04); border:1px solid var(--border2); color:var(--text-dim); font-family:var(--font-mono); font-size:.58rem; border-radius:3px; cursor:pointer; transition:all .1s; }
+    .mix-mute.on { background:rgba(255,107,53,.2); border-color:var(--orange-dim); color:var(--orange); }
+    .mix-solo.on { background:var(--cyan-glow); border-color:var(--cyan-dim); color:var(--cyan); }
+
+    /* ── FX ─────────────────────────────────────── */
+    #tab-fx { background:var(--bg); overflow-y:auto; }
+    #fx-layout { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; padding:16px; }
+    .fx-unit { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px; }
+    .fx-title { font-family:var(--font-mono); font-size:.65rem; font-weight:700; letter-spacing:.12em; color:var(--cyan); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+    .fx-dot { width:8px; height:8px; border-radius:50%; background:var(--cyan); box-shadow:var(--on-glow); }
+    .fx-param { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .fx-param label { display:flex; justify-content:space-between; font-size:.6rem; color:var(--text-dim); letter-spacing:.06em; }
+    .fx-param label span { color:var(--cyan); font-family:var(--font-mono); font-size:.58rem; }
+    .fx-slider { width:100%; accent-color:var(--cyan); }
+
+    /* ── VOCALS ─────────────────────────────────── */
+    #tab-vocals { flex-direction:column; background:var(--bg); overflow-y:auto; }
+    #vocals-layout { display:flex; flex-direction:column; gap:0; flex:1; }
+    .vsec-title {
+      display:flex; align-items:center; gap:10px; padding:10px 16px 8px;
+      font-family:var(--font-mono); font-size:.65rem; font-weight:700;
+      letter-spacing:.1em; color:var(--cyan); background:var(--bg2);
+      border-bottom:1px solid var(--border2); text-transform:uppercase;
+    }
+    .vsec-hint { font-size:.58rem; color:var(--text-dim); font-weight:400; letter-spacing:.04em; margin-left:auto; }
+    .v-tb-btn { height:24px; padding:0 10px; background:rgba(255,255,255,.04); border:1px solid var(--border2); color:var(--text-dim); font-family:var(--font-mono); font-size:.58rem; border-radius:4px; cursor:pointer; margin-left:auto; transition:all .12s; }
+    .v-tb-btn:hover { color:var(--text); background:rgba(255,255,255,.08); }
+    #vocals-top { border-bottom:1px solid var(--border2); }
+    #vocal-presets-grid { display:flex; flex-wrap:wrap; gap:8px; padding:12px 16px; }
+    .vocal-pad {
+      position:relative; width:90px; height:80px;
+      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+      border-radius:10px; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:5px;
+      cursor:pointer; transition:all .15s; overflow:hidden;
+    }
+    .vocal-pad::before { content:''; position:absolute; inset:0; background:var(--pc,var(--cyan)); opacity:0; transition:opacity .15s; }
+    .vocal-pad:hover::before { opacity:.1; }
+    .vocal-pad:hover { border-color:var(--pc,var(--cyan)); transform:scale(1.03); }
+    .vocal-pad.triggered::before { opacity:.25; }
+    .vocal-pad.triggered { transform:scale(0.96); }
+    .pad-emoji { font-size:1.6rem; position:relative; z-index:1; }
+    .pad-name { font-family:var(--font-mono); font-size:.62rem; color:var(--text); position:relative; z-index:1; letter-spacing:.06em; }
+    .pad-add { position:absolute; top:4px; right:5px; width:18px; height:18px; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15); color:var(--text-dim); font-size:.75rem; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3; transition:all .12s; }
+    .pad-add:hover { background:var(--pc,var(--cyan)); color:#000; border-color:transparent; }
+    #vocals-seq-section { border-bottom:1px solid var(--border2); }
+    #vocal-tracks { padding:8px 16px; display:flex; flex-direction:column; gap:5px; min-height:60px; }
+    .vocal-empty { text-align:center; color:var(--text-dim); font-size:.78rem; padding:20px; line-height:1.8; }
+    .vocal-track-row { display:flex; align-items:center; background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07); border-radius:6px; overflow:hidden; border-left:3px solid var(--tc,var(--cyan)); }
+    .vt-ctrl { display:flex; align-items:center; gap:5px; padding:5px 8px; width:260px; flex-shrink:0; flex-wrap:wrap; }
+    .vt-name { font-family:var(--font-mono); font-size:.6rem; color:var(--text-mid); width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .vt-mute,.vt-del { width:22px; height:22px; background:rgba(255,255,255,.04); border:1px solid var(--border2); color:var(--text-dim); font-family:var(--font-mono); font-size:.6rem; border-radius:3px; cursor:pointer; transition:all .1s; display:flex; align-items:center; justify-content:center; }
+    .vt-mute.on { background:rgba(255,107,53,.2); border-color:var(--orange-dim); color:var(--orange); }
+    .vt-del:hover { background:rgba(255,60,60,.15); color:#ff6060; }
+    .vt-params { display:flex; align-items:center; gap:4px; }
+    .vt-params label { font-size:.52rem; color:var(--text-dim); letter-spacing:.06em; width:28px; }
+    .vt-pitch,.vt-vol { width:60px; accent-color:var(--cyan); }
+    .vt-pval { font-family:var(--font-mono); font-size:.52rem; color:var(--cyan); min-width:28px; }
+    .vocal-steps { display:flex; gap:3px; flex:1; padding:5px 8px; }
+    .vocal-step { flex:1; height:30px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px; cursor:pointer; transition:background .08s,box-shadow .08s; min-width:0; }
+    .vocal-step.beat-start { border-left-color:rgba(0,229,255,.2); }
+    .vocal-step:hover { background:rgba(255,255,255,.1); }
+    .vocal-step.on { background:var(--tc,var(--cyan)); border-color:var(--tc,var(--cyan)); box-shadow:0 0 8px var(--tc,var(--cyan)); }
+    .vocal-step.playing { background:var(--orange)!important; border-color:var(--orange)!important; box-shadow:0 0 12px rgba(255,107,53,.8)!important; }
+    #vocals-rec-section { flex:1; }
+    #vocals-rec-ctrl { display:flex; align-items:center; gap:8px; padding:10px 16px; flex-wrap:wrap; }
+    .v-name-input { height:32px; padding:0 10px; background:rgba(255,255,255,.04); border:1px solid var(--border2); color:var(--text); font-family:var(--font-ui); font-size:.78rem; border-radius:6px; outline:none; width:160px; transition:border-color .15s; }
+    .v-name-input:focus { border-color:var(--cyan-dim); }
+    .v-name-input::placeholder { color:var(--text-dim); }
+    .v-rec-btn { height:32px; padding:0 16px; background:rgba(255,60,60,.12); border:1px solid rgba(255,60,60,.3); color:#ff8080; font-family:var(--font-mono); font-size:.65rem; font-weight:700; border-radius:6px; cursor:pointer; transition:all .15s; letter-spacing:.06em; }
+    .v-rec-btn:hover { background:rgba(255,60,60,.22); }
+    .v-rec-btn.recording { background:rgba(255,60,60,.35); border-color:rgba(255,60,60,.7); color:#ff4040; animation:rec-pulse .9s ease-in-out infinite; }
+    @keyframes rec-pulse { 0%,100%{box-shadow:0 0 6px rgba(255,60,60,.4);} 50%{box-shadow:0 0 16px rgba(255,60,60,.8);} }
+    .v-stop-btn { height:32px; padding:0 14px; background:rgba(255,180,0,.12); border:1px solid rgba(255,180,0,.3); color:#ffcc44; font-family:var(--font-mono); font-size:.65rem; border-radius:6px; cursor:pointer; transition:all .15s; }
+    .v-rec-tip { font-size:.62rem; color:var(--text-dim); }
+    .rec-indicator { font-family:var(--font-mono); font-size:.6rem; color:#ff4040; animation:rec-pulse .9s ease-in-out infinite; margin-left:4px; }
+    #recorded-list { padding:6px 16px 14px; display:flex; flex-direction:column; gap:5px; }
+    .v-rec-hint { font-size:.72rem; color:var(--text-dim); padding:4px; }
+    .rec-item { display:flex; align-items:center; gap:8px; padding:7px 12px; background:rgba(255,255,255,.03); border:1px solid var(--border2); border-radius:6px; border-left:3px solid #a78bfa; }
+    .rec-item-name { flex:1; font-size:.78rem; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rec-item-dur { font-family:var(--font-mono); font-size:.62rem; color:var(--text-dim); }
+    .rec-prev,.rec-add,.rec-del { height:26px; padding:0 8px; border-radius:5px; font-family:var(--font-mono); font-size:.65rem; cursor:pointer; transition:all .12s; border:1px solid var(--border2); }
+    .rec-prev { background:rgba(0,229,255,.08); color:var(--cyan); }
+    .rec-prev:hover { background:rgba(0,229,255,.18); }
+    .rec-add { background:rgba(0,200,100,.08); color:#44ff99; border-color:rgba(0,200,100,.2); }
+    .rec-add:hover { background:rgba(0,200,100,.18); }
+    .rec-del { background:rgba(255,60,60,.06); color:#ff8080; border-color:rgba(255,60,60,.15); }
+    .rec-del:hover { background:rgba(255,60,60,.16); }
+
+    /* ── PROJECTS PANEL ─────────────────────────── */
+    #projects-panel { position:fixed; top:0; right:-320px; width:300px; height:100vh; background:#0d0d1e; border-left:1px solid var(--border); z-index:100; transition:right .25s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; padding:16px; }
+    #projects-panel.open { right:0; }
+    #projects-panel h3 { font-family:var(--font-mono); font-size:.75rem; color:var(--cyan); letter-spacing:.1em; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border2); }
+    #projects-list { flex:1; overflow-y:auto; }
+    .proj-item { display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid var(--border2); border-radius:6px; margin-bottom:6px; background:rgba(255,255,255,.02); transition:all .12s; }
+    .proj-item:hover { background:rgba(0,229,255,.05); border-color:var(--border); }
+    .proj-info { flex:1; min-width:0; }
+    .proj-name { display:block; font-size:.8rem; color:var(--text); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .proj-date { display:block; font-size:.65rem; color:var(--text-dim); margin-top:2px; font-family:var(--font-mono); }
+    .proj-acts { display:flex; gap:4px; margin-left:8px; }
+    .btn-pload { padding:4px 10px; background:var(--cyan-glow); border:1px solid var(--cyan-dim); color:var(--cyan); font-family:var(--font-mono); font-size:.6rem; border-radius:4px; cursor:pointer; transition:all .12s; }
+    .btn-pload:hover { background:rgba(0,229,255,.22); }
+    .btn-pdel { padding:4px 7px; background:rgba(255,60,60,.08); border:1px solid rgba(255,60,60,.2); color:rgba(255,100,100,.7); font-size:.7rem; border-radius:4px; cursor:pointer; transition:all .12s; }
+    .btn-pdel:hover { background:rgba(255,60,60,.18); color:#ff6060; }
+    .no-projects { font-size:.78rem; color:var(--text-dim); text-align:center; padding:20px; }
+    #close-proj { margin-top:12px; width:100%; padding:8px; background:rgba(255,255,255,.04); border:1px solid var(--border2); color:var(--text-dim); font-family:var(--font-mono); font-size:.65rem; border-radius:6px; cursor:pointer; }
+    #close-proj:hover { color:var(--text); }
+
+    /* ── TOAST ──────────────────────────────────── */
+    .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); padding:8px 20px; border-radius:20px; font-family:var(--font-mono); font-size:.7rem; pointer-events:none; opacity:0; transition:all .25s; z-index:999; white-space:nowrap; }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    .toast-success { background:rgba(0,200,100,.9); color:#003020; }
+    .toast-error { background:rgba(255,60,60,.9); color:#fff; }
+    .toast-warn { background:rgba(255,180,0,.9); color:#2a1a00; }
+    .toast-info { background:rgba(0,150,255,.85); color:#fff; }
+
+    /* ── RESPONSIVE ─────────────────────────────── */
+    @media(max-width:900px){.synth-layout{grid-template-columns:1fr 1fr;}#fx-layout{grid-template-columns:1fr 1fr;}}
+    @media(max-width:640px){.synth-layout{grid-template-columns:1fr;}#fx-layout{grid-template-columns:1fr;}.tab-btn{padding:0 10px;font-size:.58rem;}}
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div id="header-top">
+      <span class="logo-text">⬡ BEATFORGE</span>
+      <div class="hdr-sep"></div>
+      <span id="project-name" contenteditable="true" spellcheck="false">Untitled Project</span>
+      <div class="hdr-sep"></div>
+      <button class="hdr-btn" id="btn-new">NEW</button>
+      <button class="hdr-btn primary" id="btn-save">SAVE</button>
+      <button class="hdr-btn" id="btn-load">PROJECTS</button>
+      <div class="hdr-spacer"></div>
+      <div id="user-info">
+        <img id="user-avatar" alt="">
+        <span id="user-name"></span>
+        <span id="guest-badge">GUEST</span>
+        <button class="hdr-btn" id="btn-signout">SIGN OUT</button>
+      </div>
+    </div>
+    <div id="header-bottom">
+      <div id="transport">
+        <button class="transport-btn" id="btn-rewind" title="Rewind">⏮</button>
+        <button class="transport-btn" id="btn-play" title="Play/Pause (Space)">▶</button>
+        <button class="transport-btn" id="btn-stop" title="Stop (Esc)">⏹</button>
+      </div>
+      <div id="bpm-ctrl">
+        <button id="bpm-down">−</button>
+        <span id="bpm-display">120</span>
+        <button id="bpm-up">+</button>
+      </div>
+      <span id="bpm-label">BPM</span>
+      <div id="master-vol-ctrl">
+        <label>VOL</label>
+        <input type="range" id="master-vol" min="0" max="1.2" step="0.01" value="0.85">
+        <span id="master-vol-val">85%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div id="tabs">
+    <button class="tab-btn active" data-tab="sequencer">SEQUENCER</button>
+    <button class="tab-btn" data-tab="pianoroll">PIANO ROLL</button>
+    <button class="tab-btn" data-tab="synth">SYNTHESIZER</button>
+    <button class="tab-btn" data-tab="mixer">MIXER</button>
+    <button class="tab-btn" data-tab="fx">FX CHAIN</button>
+    <button class="tab-btn" data-tab="vocals">🎤 VOCALS</button>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- SEQUENCER -->
+    <div class="tab-panel active" id="tab-sequencer">
+      <div id="seq-toolbar">
+        <label>PATTERN:</label>
+        <div id="pattern-btns"></div>
+        <button class="seq-tb-btn" id="btn-add-pat">+ PATTERN</button>
+        <div class="hdr-div"></div>
+        <label>STEPS:</label>
+        <select id="steps-select">
+          <option value="16" selected>16</option>
+          <option value="32">32</option>
+          <option value="64">64</option>
+        </select>
+        <div class="hdr-div"></div>
+        <button class="seq-tb-btn" id="btn-clear-seq">CLEAR</button>
+        <span style="font-size:.6rem;color:var(--text-dim);margin-left:auto;">Click steps to toggle · M=Mute S=Solo</span>
+      </div>
+      <div id="seq-grid"></div>
+    </div>
+
+    <!-- PIANO ROLL -->
+    <div class="tab-panel" id="tab-pianoroll">
+      <div id="pr-toolbar">
+        <label>LOOP:</label>
+        <select id="pr-loop">
+          <option value="2">2 Beats</option>
+          <option value="4">4 Beats</option>
+          <option value="8" selected>8 Beats</option>
+          <option value="16">16 Beats</option>
+          <option value="32">32 Beats</option>
+        </select>
+        <button class="pr-btn" id="pr-zoom-in">ZOOM +</button>
+        <button class="pr-btn" id="pr-zoom-out">ZOOM −</button>
+        <button class="pr-btn" id="pr-clear">CLEAR</button>
+        <span class="pr-hint">L-click=Draw · R-click=Erase · Scroll=Navigate · Shift+Scroll=Horizontal</span>
+      </div>
+      <div id="piano-roll-wrap">
+        <canvas id="piano-roll-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- SYNTH -->
+    <div class="tab-panel" id="tab-synth">
+      <div class="synth-layout">
+        <div class="synth-panel">
+          <div class="synth-title">OSC 1</div>
+          <div id="osc1-type" class="wave-btns">
+            <button class="wave-btn active" data-wave="sine">SINE</button>
+            <button class="wave-btn" data-wave="triangle">TRI</button>
+            <button class="wave-btn" data-wave="sawtooth">SAW</button>
+            <button class="wave-btn" data-wave="square">SQR</button>
+          </div>
+          <div class="knob-row">
+            <div class="knob-group">
+              <div class="knob-label"><span>VOLUME</span><span id="osc1-vol-v">0.70</span></div>
+              <input type="range" class="s-slider" id="osc1-vol" min="0" max="1" step="0.01" value="0.7">
+            </div>
+          </div>
+        </div>
+        <div class="synth-panel">
+          <div class="synth-title">OSC 2</div>
+          <div id="osc2-type" class="wave-btns">
+            <button class="wave-btn" data-wave="sine">SINE</button>
+            <button class="wave-btn" data-wave="triangle">TRI</button>
+            <button class="wave-btn" data-wave="sawtooth">SAW</button>
+            <button class="wave-btn active" data-wave="square">SQR</button>
+          </div>
+          <div class="knob-row">
+            <div class="knob-group">
+              <div class="knob-label"><span>VOLUME</span><span id="osc2-vol-v">0.30</span></div>
+              <input type="range" class="s-slider" id="osc2-vol" min="0" max="1" step="0.01" value="0.3">
+            </div>
+            <div class="knob-group">
+              <div class="knob-label"><span>DETUNE</span><span id="osc2-det-v">7ct</span></div>
+              <input type="range" class="s-slider" id="osc2-det" min="-50" max="50" step="1" value="7">
+            </div>
+          </div>
+        </div>
+        <div class="synth-panel">
+          <div class="synth-title">FILTER</div>
+          <div id="filter-type" class="ftype-btns">
+            <button class="ftype-btn active" data-ft="lowpass">LP</button>
+            <button class="ftype-btn" data-ft="highpass">HP</button>
+            <button class="ftype-btn" data-ft="bandpass">BP</button>
+            <button class="ftype-btn" data-ft="notch">NOTCH</button>
+          </div>
+          <div class="knob-row">
+            <div class="knob-group">
+              <div class="knob-label"><span>CUTOFF</span><span id="filt-cut-v">1800Hz</span></div>
+              <input type="range" class="s-slider" id="filt-cut" min="100" max="15000" step="10" value="1800">
+            </div>
+            <div class="knob-group">
+              <div class="knob-label"><span>RESONANCE</span><span id="filt-res-v">4.0</span></div>
+              <input type="range" class="s-slider" id="filt-res" min="0.1" max="25" step="0.1" value="4">
+            </div>
+          </div>
+        </div>
+        <div class="synth-panel">
+          <div class="synth-title">ENVELOPE</div>
+          <div class="env-grid">
+            <div class="knob-group">
+              <div class="knob-label"><span>ATTACK</span><span id="env-a-v">0.010s</span></div>
+              <input type="range" class="s-slider" id="env-a" min="0.001" max="2" step="0.001" value="0.01">
+            </div>
+            <div class="knob-group">
+              <div class="knob-label"><span>DECAY</span><span id="env-d-v">0.150s</span></div>
+              <input type="range" class="s-slider" id="env-d" min="0.001" max="2" step="0.001" value="0.15">
+            </div>
+            <div class="knob-group">
+              <div class="knob-label"><span>SUSTAIN</span><span id="env-s-v">0.60</span></div>
+              <input type="range" class="s-slider" id="env-s" min="0" max="1" step="0.01" value="0.6">
+            </div>
+            <div class="knob-group">
+              <div class="knob-label"><span>RELEASE</span><span id="env-r-v">0.350s</span></div>
+              <input type="range" class="s-slider" id="env-r" min="0.01" max="4" step="0.01" value="0.35">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="synth-keyboard">
+        <div style="font-family:var(--font-mono);font-size:.58rem;color:var(--text-dim);letter-spacing:.1em;margin-bottom:6px;">PREVIEW KEYBOARD (C3–C5)</div>
+        <div class="synth-keys" id="synth-keys"></div>
+      </div>
+    </div>
+
+    <!-- MIXER -->
+    <div class="tab-panel" id="tab-mixer">
+      <div id="mixer-grid"></div>
+    </div>
+
+    <!-- FX -->
+    <div class="tab-panel" id="tab-fx">
+      <div id="fx-layout">
+        <div class="fx-unit">
+          <div class="fx-title"><div class="fx-dot"></div>REVERB</div>
+          <div class="fx-param"><label>WET MIX <span id="rv-wet-v">0.00</span></label><input type="range" class="fx-slider" id="rv-wet" min="0" max="1" step="0.01" value="0"></div>
+          <div class="fx-param"><label>ROOM SIZE <span id="rv-size-v">0.50</span></label><input type="range" class="fx-slider" id="rv-size" min="0.1" max="1" step="0.01" value="0.5"></div>
+        </div>
+        <div class="fx-unit">
+          <div class="fx-title"><div class="fx-dot"></div>DELAY</div>
+          <div class="fx-param"><label>WET MIX <span id="dl-wet-v">0.00</span></label><input type="range" class="fx-slider" id="dl-wet" min="0" max="1" step="0.01" value="0"></div>
+          <div class="fx-param"><label>TIME (sec) <span id="dl-time-v">0.38</span></label><input type="range" class="fx-slider" id="dl-time" min="0.05" max="2" step="0.01" value="0.375"></div>
+          <div class="fx-param"><label>FEEDBACK <span id="dl-fb-v">0.35</span></label><input type="range" class="fx-slider" id="dl-fb" min="0" max="0.95" step="0.01" value="0.35"></div>
+        </div>
+        <div class="fx-unit">
+          <div class="fx-title"><div class="fx-dot"></div>DISTORTION</div>
+          <div class="fx-param"><label>WET MIX <span id="dist-wet-v">0.00</span></label><input type="range" class="fx-slider" id="dist-wet" min="0" max="1" step="0.01" value="0"></div>
+          <div class="fx-param"><label>DRIVE <span id="dist-drv-v">0.30</span></label><input type="range" class="fx-slider" id="dist-drv" min="0" max="1" step="0.01" value="0.3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOCALS -->
+    <div class="tab-panel" id="tab-vocals">
+      <div id="vocals-layout">
+        <div id="vocals-top">
+          <div class="vsec-title"><span>🎵 VOCAL PRESETS</span><span class="vsec-hint">Click to preview · + to add to sequencer</span></div>
+          <div id="vocal-presets-grid"></div>
+        </div>
+        <div id="vocals-seq-section">
+          <div class="vsec-title"><span>🎛️ VOCAL SEQUENCER</span><button class="v-tb-btn" id="vocal-clear-btn">CLEAR ALL</button></div>
+          <div id="vocal-tracks"></div>
+        </div>
+        <div id="vocals-rec-section">
+          <div class="vsec-title"><span>🎤 MIC RECORDING</span><span id="vocal-rec-indicator" class="rec-indicator" style="display:none">● REC</span></div>
+          <div id="vocals-rec-ctrl">
+            <input type="text" id="vocal-rec-name" placeholder="Sample name..." class="v-name-input">
+            <button class="v-rec-btn" id="vocal-rec-btn">● RECORD</button>
+            <button class="v-stop-btn" id="vocal-stop-btn" style="display:none">■ STOP</button>
+            <span class="v-rec-tip">Requires microphone permission</span>
+          </div>
+          <div id="recorded-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PROJECTS PANEL -->
+<div id="projects-panel">
+  <h3>☁ CLOUD PROJECTS</h3>
+  <div id="projects-list"><p class="no-projects">Loading...</p></div>
+  <button id="close-proj" onclick="document.getElementById('projects-panel').classList.remove('open')">CLOSE ✕</button>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/audio-engine.js"></script>
+<script src="js/vocal-engine.js"></script>
+<script src="js/vocal-ui.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+// ── Mini keyboard builder ────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const wrap = document.getElementById('synth-keys');
+  if (!wrap) return;
+  const BLACK = new Set([1,3,6,8,10]);
+  for (let m = 48; m <= 72; m++) {
+    const el = document.createElement('div');
+    const isBlack = BLACK.has(m % 12);
+    el.className = 'skey ' + (isBlack ? 'black' : 'white');
+    el.addEventListener('mousedown', () => triggerPreviewNote(m));
+    wrap.appendChild(el);
+  }
+});
+
+function triggerPreviewNote(midi) {
+  AudioEngine.init();
+  const ctx = AudioEngine.ctx;
+  if (!ctx) return;
+  if (ctx.state === 'suspended') ctx.resume();
+  const s = window.AppState ? window.AppState.synth : {};
+  const osc1t = s.osc1Type || 'sawtooth';
+  const osc2t = s.osc2Type || 'square';
+  const detune = s.osc2Detune || 7;
+  const o1v = s.osc1Vol !== undefined ? s.osc1Vol : 0.7;
+  const o2v = s.osc2Vol !== undefined ? s.osc2Vol : 0.3;
+  const ft = s.filterType || 'lowpass';
+  const fc = s.filterCutoff || 1800;
+  const fq = s.filterRes || 4;
+  const atk = s.attack || 0.01;
+  const dec = s.decay || 0.15;
+  const sus = s.sustain || 0.6;
+  const rel = s.release || 0.35;
+  const freq = 440 * Math.pow(2, (midi - 69) / 12);
+  const now = ctx.currentTime;
+  const osc1 = ctx.createOscillator(); osc1.type = osc1t; osc1.frequency.value = freq;
+  const osc2 = ctx.createOscillator(); osc2.type = osc2t; osc2.frequency.value = freq; osc2.detune.value = detune;
+  const filt = ctx.createBiquadFilter(); filt.type = ft; filt.frequency.value = fc; filt.Q.value = fq;
+  const env = ctx.createGain();
+  const g1 = ctx.createGain(); g1.gain.value = o1v;
+  const g2 = ctx.createGain(); g2.gain.value = o2v;
+  const dur = 0.4;
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(0.5, now + atk);
+  env.gain.linearRampToValueAtTime(0.5 * sus, now + atk + dec);
+  env.gain.setValueAtTime(0.5 * sus, now + dur);
+  env.gain.linearRampToValueAtTime(0, now + dur + rel);
+  osc1.connect(g1); osc2.connect(g2); g1.connect(filt); g2.connect(filt);
+  filt.connect(env); env.connect(ctx.destination);
+  osc1.start(now); osc2.start(now);
+  osc1.stop(now + dur + rel + 0.1); osc2.stop(now + dur + rel + 0.1);
+}
+</script>
+</body>
+</html>

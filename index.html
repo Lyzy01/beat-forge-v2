@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeatForge Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Exo+2:wght@200;300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --cyan: #00e5ff;
+      --orange: #ff6b35;
+      --purple: #a855f7;
+      --bg: #05050f;
+    }
+
+    body {
+      background: var(--bg);
+      color: #dde0f0;
+      font-family: 'Exo 2', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── ANIMATED BACKGROUND ─────────────────────────── */
+    #bg {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    /* Rotating gradient orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.18;
+      animation: orb-drift linear infinite;
+    }
+    .orb1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #00e5ff, transparent 70%);
+      top: -200px; left: -100px;
+      animation-duration: 18s;
+    }
+    .orb2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #a855f7, transparent 70%);
+      bottom: -150px; right: -100px;
+      animation-duration: 24s;
+      animation-direction: reverse;
+    }
+    .orb3 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #ff6b35, transparent 70%);
+      top: 40%; left: 40%;
+      animation-duration: 30s;
+      opacity: 0.1;
+    }
+    @keyframes orb-drift {
+      0%   { transform: translate(0, 0) rotate(0deg); }
+      33%  { transform: translate(60px, 40px) rotate(120deg); }
+      66%  { transform: translate(-40px, 60px) rotate(240deg); }
+      100% { transform: translate(0, 0) rotate(360deg); }
+    }
+
+    /* Grid lines */
+    .grid-lines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: grid-scroll 20s linear infinite;
+    }
+    @keyframes grid-scroll {
+      from { background-position: 0 0; }
+      to   { background-position: 50px 50px; }
+    }
+
+    /* Scan line */
+    .scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0,229,255,0.4), transparent);
+      animation: scan 6s ease-in-out infinite;
+      filter: blur(1px);
+    }
+    @keyframes scan {
+      0%   { top: -2px; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: 100vh; opacity: 0; }
+    }
+
+    /* Particle dots */
+    .particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--cyan);
+      border-radius: 50%;
+      opacity: 0;
+      animation: particle-float linear infinite;
+    }
+    @keyframes particle-float {
+      0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10%  { opacity: 0.6; }
+      90%  { opacity: 0.3; }
+      100% { transform: translateY(-20px) translateX(var(--drift)); opacity: 0; }
+    }
+
+    /* ── MAIN CONTENT ─────────────────────────────────── */
+    .scene {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+      animation: scene-in 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes scene-in {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── LOGO ─────────────────────────────────────────── */
+    .logo { text-align: center; position: relative; }
+
+    .logo-hex {
+      font-size: 3.5rem;
+      display: block;
+      margin-bottom: 10px;
+      animation: hex-spin 8s linear infinite;
+      filter: drop-shadow(0 0 30px rgba(0,229,255,0.7));
+      line-height: 1;
+    }
+    @keyframes hex-spin {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(0,229,255,0.5)); transform: scale(1); }
+      25%       { filter: drop-shadow(0 0 40px rgba(168,85,247,0.7)); transform: scale(1.05); }
+      50%       { filter: drop-shadow(0 0 40px rgba(0,229,255,0.8)); transform: scale(1); }
+      75%       { filter: drop-shadow(0 0 40px rgba(255,107,53,0.6)); transform: scale(1.05); }
+    }
+
+    .logo h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #00e5ff 0%, #a855f7 50%, #ff6b35 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradient-shift 4s ease infinite;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+    @keyframes gradient-shift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .logo-sub {
+      margin-top: 10px;
+      font-size: 0.72rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(221,224,240,0.4);
+      font-weight: 300;
+    }
+
+    /* Animated EQ bars under logo */
+    .eq-bars {
+      display: flex;
+      gap: 3px;
+      justify-content: center;
+      margin-top: 14px;
+      height: 20px;
+      align-items: flex-end;
+    }
+    .eq-bar {
+      width: 3px;
+      background: var(--cyan);
+      border-radius: 2px 2px 0 0;
+      opacity: 0.6;
+      animation: eq-bounce linear infinite;
+    }
+    @keyframes eq-bounce {
+      0%, 100% { height: 4px; }
+      50%       { height: var(--h); }
+    }
+
+    /* ── CARD ─────────────────────────────────────────── */
+    .card {
+      background: rgba(10, 10, 28, 0.85);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 20px;
+      padding: 36px 40px;
+      width: min(380px, 90vw);
+      backdrop-filter: blur(30px);
+      box-shadow:
+        0 0 0 1px rgba(0,229,255,0.05),
+        0 20px 60px rgba(0,0,0,0.7),
+        0 0 80px rgba(0,229,255,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Card shimmer effect */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(0,229,255,0.05) 60deg, transparent 120deg);
+      animation: card-rotate 6s linear infinite;
+    }
+    @keyframes card-rotate {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .card-inner { position: relative; z-index: 1; }
+
+    .card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    .card p {
+      color: rgba(221,224,240,0.5);
+      font-size: 0.82rem;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 13px 18px;
+      border-radius: 12px;
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.15s;
+    }
+    .btn:hover::after { background: rgba(255,255,255,0.06); }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0) scale(0.98); }
+
+    .btn-google {
+      background: #fff;
+      color: #1a1a1a;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .btn-google:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+
+    .btn-guest {
+      background: transparent;
+      color: rgba(221,224,240,0.55);
+      border: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.82rem;
+    }
+    .btn-guest:hover { border-color: rgba(0,229,255,0.3); color: var(--cyan); }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0 14px;
+      color: rgba(221,224,240,0.2);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+    }
+
+    #error-msg {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: #ff7070;
+      display: none;
+      text-align: center;
+      padding: 8px;
+      background: rgba(255,60,60,0.08);
+      border-radius: 8px;
+      border: 1px solid rgba(255,60,60,0.2);
+    }
+
+    /* Spinner */
+    .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(0,0,0,0.15);
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FEATURE PILLS ───────────────────────────────── */
+    .features {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 420px;
+    }
+    .feat {
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      font-size: 0.68rem;
+      color: rgba(221,224,240,0.5);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+      animation: feat-in 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .feat:hover {
+      background: rgba(0,229,255,0.07);
+      border-color: rgba(0,229,255,0.25);
+      color: var(--cyan);
+      transform: translateY(-2px);
+    }
+
+    /* Staggered animation for feature pills */
+    .feat:nth-child(1) { animation-delay: 0.3s; }
+    .feat:nth-child(2) { animation-delay: 0.4s; }
+    .feat:nth-child(3) { animation-delay: 0.5s; }
+    .feat:nth-child(4) { animation-delay: 0.6s; }
+    .feat:nth-child(5) { animation-delay: 0.7s; }
+    .feat:nth-child(6) { animation-delay: 0.8s; }
+    @keyframes feat-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── VERSION TAG ─────────────────────────────────── */
+    .version {
+      position: fixed;
+      bottom: 14px;
+      right: 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      color: rgba(221,224,240,0.15);
+      letter-spacing: 0.1em;
+      z-index: 20;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── BACKGROUND ──────────────────────────────────────── -->
+<div id="bg">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="grid-lines"></div>
+  <div class="scanline"></div>
+  <div class="particles" id="particles"></div>
+</div>
+
+<!-- ── MAIN SCENE ──────────────────────────────────────── -->
+<div class="scene">
+  <div class="logo">
+    <span class="logo-hex">⬡</span>
+    <h1>BEATFORGE</h1>
+    <p class="logo-sub">Professional Web Music Studio</p>
+    <div class="eq-bars" id="eq-bars"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-inner">
+      <h2>Start Creating</h2>
+      <p>Sign in to save your projects to the cloud and access them from anywhere.</p>
+
+      <button class="btn btn-google" id="btn-google">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+        <div class="spinner" id="google-spinner"></div>
+      </button>
+
+      <div class="divider">OR</div>
+
+      <button class="btn btn-guest" id="btn-guest">
+        🎧 Try as Guest &nbsp;·&nbsp; No sign-in needed
+      </button>
+
+      <div id="error-msg"></div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feat">🥁 Sequencer</div>
+    <div class="feat">🎹 Piano Roll</div>
+    <div class="feat">🎛️ Mixer</div>
+    <div class="feat">🔊 Synthesizer</div>
+    <div class="feat">🎤 Vocals</div>
+    <div class="feat">☁️ Cloud Save</div>
+  </div>
+</div>
+
+<div class="version">BEATFORGE v2.0</div>
+
+<!-- ── SCRIPTS ──────────────────────────────────────────── -->
+
+<!-- Firebase — loaded with onerror so page never breaks if CDN fails -->
+<script>
+  // Safe globals — defined BEFORE firebase loads so they always exist
+  window.FIREBASE_READY = false;
+  window.auth = null;
+  window.db = null;
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" onerror="console.warn('Firebase CDN failed to load')"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" onerror="console.warn('Firebase Auth CDN failed to load')"></script>
+<script src="js/firebase-config.js" onerror="console.warn('firebase-config.js failed to load')"></script>
+
+<script>
+  // ─── This entire block is wrapped so ONE error never breaks anything ───
+  (function() {
+    try {
+      // EQ Bars
+      const eqWrap = document.getElementById('eq-bars');
+      for (let i = 0; i < 18; i++) {
+        const b = document.createElement('div');
+        b.className = 'eq-bar';
+        b.style.setProperty('--h', (4 + Math.random() * 16) + 'px');
+        b.style.animationDuration = (0.4 + Math.random() * 0.6) + 's';
+        b.style.animationDelay = (Math.random() * 0.5) + 's';
+        b.style.opacity = 0.3 + Math.random() * 0.5;
+        b.style.background = `hsl(${['185','270','20'][Math.floor(Math.random()*3)]}, 100%, 65%)`;
+        eqWrap.appendChild(b);
+      }
+    } catch(e) {}
+
+    try {
+      // Particles
+      const wrap = document.getElementById('particles');
+      for (let i = 0; i < 35; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.setProperty('--drift', (Math.random() * 100 - 50) + 'px');
+        p.style.animationDuration = (6 + Math.random() * 12) + 's';
+        p.style.animationDelay = (Math.random() * 10) + 's';
+        const sz = (1 + Math.random() * 2) + 'px';
+        p.style.width = p.style.height = sz;
+        p.style.background = ['#00e5ff','#a855f7','#ff6b35','#ffffff'][Math.floor(Math.random()*4)];
+        wrap.appendChild(p);
+      }
+    } catch(e) {}
+
+    // Check if already signed in
+    try {
+      if (window.FIREBASE_READY && window.auth) {
+        window.auth.onAuthStateChanged(user => {
+          if (user) window.location.href = 'daw.html';
+        });
+      }
+    } catch(e) {}
+
+    // ── GUEST BUTTON — always works, no dependencies ────────
+    document.getElementById('btn-guest').addEventListener('click', function() {
+      try { sessionStorage.setItem('bf_guest', '1'); } catch(e) {}
+      window.location.href = 'daw.html';
+    });
+
+    // ── GOOGLE BUTTON ────────────────────────────────────────
+    document.getElementById('btn-google').addEventListener('click', async function() {
+      const spinner = document.getElementById('google-spinner');
+      const btn = document.getElementById('btn-google');
+
+      // Firebase not configured — show helpful message
+      if (!window.FIREBASE_READY || !window.auth) {
+        showError('⚠️ Firebase not set up yet. Fill in js/firebase-config.js with your Firebase credentials — or use Guest mode below!');
+        return;
+      }
+
+      clearError();
+      try { spinner.style.display = 'block'; } catch(e) {}
+      btn.disabled = true;
+
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await window.auth.signInWithPopup(provider);
+        window.location.href = 'daw.html';
+      } catch(e) {
+        try { spinner.style.display = 'none'; } catch(_) {}
+        btn.disabled = false;
+        if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+        showError('Sign-in failed: ' + (e.message || 'Unknown error. Check Firebase setup.'));
+      }
+    });
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      if (!el) return;
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function clearError() {
+      const el = document.getElementById('error-msg');
+      if (el) el.style.display = 'none';
+    }
+
+  })(); // end safe wrapper
+</script>
+</body>
+</html>
